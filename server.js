@@ -274,3 +274,44 @@ app.delete('/api/invoices/:id', auth, adminOnly, (req, res) => {
   db.get('invoices').remove({ id: Number(req.params.id) }).write();
   res.json({ success: true });
 });
+
+// WEIBULL
+const { weibullAnalysis } = require('./weibull');
+
+app.get('/api/weibull/:componentId', auth, (req, res) => {
+  const componentId = Number(req.params.componentId)
+  const component = db.get('components').find({ id: componentId }).value()
+  if (!component) return res.status(404).json({ error: 'Composant introuvable' })
+
+  const data = db.get('sensor_data').filter({ component_id: componentId }).sortBy('recorded_at').value()
+  if (data.length < 3) return res.status(400).json({ error: 'Pas assez de données (minimum 3 mesures)' })
+
+  const values = data.map(d => d.value)
+  const timestamps = data.map(d => new Date(d.recorded_at).getTime())
+  const result = weibullAnalysis(values, timestamps)
+
+  if (!result) return res.status(400).json({ error: 'Calcul impossible' })
+
+  res.json({
+    component_name: component.name,
+    component_id: componentId,
+    data_points: data.length,
+    ...result
+  })
+})
+
+app.get('/api/weibull/machine/:machineId', auth, (req, res) => {
+  const machineId = Number(req.params.machineId)
+  const components = db.get('components').filter({ machine_id: machineId }).value()
+
+  const results = components.map(c => {
+    const data = db.get('sensor_data').filter({ component_id: c.id }).sortBy('recorded_at').value()
+    if (data.length < 3) return { component_id: c.id, component_name: c.name, error: 'Pas assez de données' }
+    const values = data.map(d => d.value)
+    const timestamps = data.map(d => new Date(d.recorded_at).getTime())
+    const result = weibullAnalysis(values, timestamps)
+    return { component_id: c.id, component_name: c.name, data_points: data.length, ...result }
+  })
+
+  res.json({ machine_id: machineId, components: results })
+})
