@@ -9,8 +9,8 @@ const { weibullAnalysis } = require('./weibull');
 const app = express();
 const SECRET = process.env.JWT_SECRET || 'predictiveflow_secret_2026';
 
-app.use(cors({
-  origin: ['http://localhost', 'http://localhost:5173', 'capacitor://localhost', 'https://localhost'],
+app.use(cors());
+  origin: ['http://localhost', 'http://localhost:5173', 'capacitor://localhost', 'https://localhost', 'https://predictivefloww.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
