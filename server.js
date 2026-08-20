@@ -5,7 +5,9 @@ const bcrypt = require('bcryptjs');
 const db = require('./db');
 
 const app = express();
-const SECRET = 'predictiveflow_secret_2026';
+const rateLimit = require('express-rate-limit');
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { error: 'Trop de tentatives, réessaie dans 15 minutes' } });
+const SECRET = process.env.JWT_SECRET || 'predictiveflow_secret_2026';
 
 app.use(cors({
   origin: ['http://localhost', 'http://localhost:5173', 'capacitor://localhost', 'https://localhost'],
@@ -31,7 +33,7 @@ const nextId = (collection) => {
 };
 
 // AUTH
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', loginLimiter, (req, res) => {
   const { email, password } = req.body;
   const user = db.get('users').find({ email }).value();
   if (!user || !bcrypt.compareSync(password, user.password))
