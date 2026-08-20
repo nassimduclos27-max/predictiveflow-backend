@@ -10,9 +10,6 @@ const app = express();
 const SECRET = process.env.JWT_SECRET || 'predictiveflow_secret_2026';
 
 app.use(cors());
-  origin: ['http://localhost', 'http://localhost:5173', 'capacitor://localhost', 'https://localhost', 'https://predictivefloww.vercel.app'],
-  credentials: true
-}));
 app.use(express.json());
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { error: 'Trop de tentatives, réessaie dans 15 minutes' } });
