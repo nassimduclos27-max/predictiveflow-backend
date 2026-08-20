@@ -3,12 +3,15 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost', 'http://localhost:5173', 'capacitor://localhost', 'https://localhost'],
+  credentials: true
+}));
 app.use(express.json());
 
 const SECRET = 'predictiveflow_secret_2026';
 const users = [
-  { id: 1, email: 'admin@flowpack.fr', password: 'admin123', role: 'admin' }
+  { id: 1, email: 'admin@flowpack.fr', password: 'admin123', role: 'admin', full_name: 'Admin Flowpack' }
 ];
 
 app.post('/api/auth/login', (req, res) => {
@@ -16,19 +19,29 @@ app.post('/api/auth/login', (req, res) => {
   const user = users.find(u => u.email === email && u.password === password);
   if (!user) return res.status(401).json({ error: 'Identifiants incorrects' });
   const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET, { expiresIn: '24h' });
-  res.json({ token, email: user.email, role: user.role });
+  res.json({ token, user: { id: user.id, email: user.email, role: user.role, full_name: user.full_name } });
 });
 
-app.post('/api/auth/register', (req, res) => {
-  const { email, password, role } = req.body;
-  const exists = users.find(u => u.email === email);
-  if (exists) return res.status(400).json({ error: 'Email déjà utilisé' });
-  const user = { id: users.length + 1, email, password, role: role || 'client' };
-  users.push(user);
-  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET, { expiresIn: '24h' });
-  res.json({ token, email: user.email, role: user.role });
+app.get('/api/auth/me', (req, res) => {
+  const auth = req.headers.authorization?.split(' ')[1];
+  if (!auth) return res.status(401).json({ error: 'Non autorisé' });
+  try {
+    const decoded = jwt.verify(auth, SECRET);
+    res.json({ user: decoded });
+  } catch { res.status(401).json({ error: 'Token invalide' }) }
 });
 
+app.get('/api/machines', (req, res) => res.json({ machines: [] }));
+app.post('/api/machines', (req, res) => res.json({ machine: { id: 1, ...req.body } }));
+app.get('/api/alerts', (req, res) => res.json({ alerts: [] }));
+app.get('/api/alerts/stats', (req, res) => res.json({ stats: {} }));
+app.get('/api/sensors/overview', (req, res) => res.json({ sensors: [] }));
+app.get('/api/admin/users', (req, res) => res.json({ users }));
+app.post('/api/admin/users', (req, res) => res.json({ user: { id: users.length + 1, ...req.body } }));
+app.get('/api/quotes', (req, res) => res.json({ quotes: [] }));
+app.get('/api/invoices', (req, res) => res.json({ invoices: [] }));
+app.get('/api/projects', (req, res) => res.json({ projects: [] }));
+app.get('/api/messages/contacts', (req, res) => res.json({ contacts: [] }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 3001;
