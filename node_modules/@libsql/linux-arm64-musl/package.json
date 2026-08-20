@@ -1,0 +1,36 @@
+{
+  "name": "@libsql/linux-arm64-musl",
+  "description": "Prebuilt binary package for `libsql` on `linux-arm64-musl`.",
+  "version": "0.5.29",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "index.node",
+  "files": [
+    "index.node"
+  ],
+  "neon": {
+    "type": "binary",
+    "rust": "aarch64-unknown-linux-musl",
+    "node": "linux-arm64-musl",
+    "platform": "linux",
+    "arch": "arm64",
+    "abi": "musl"
+  },
+  "author": "Pekka Enberg <penberg@iki.fi>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tursodatabase/libsql-js.git"
+  },
+  "keywords": [
+    "libsql"
+  ],
+  "bugs": {
+    "url": "https://github.com/tursodatabase/libsql-js/issues"
+  },
+  "homepage": "https://github.com/tursodatabase/libsql-js",
+  "license": "MIT"
+}
