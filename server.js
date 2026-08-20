@@ -242,3 +242,35 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// COMPOSANTS - modifier et supprimer
+app.put('/api/machines/:machineId/components/:componentId', auth, adminOnly, (req, res) => {
+  db.get('components').find({ id: Number(req.params.componentId) }).assign(req.body).write();
+  const component = db.get('components').find({ id: Number(req.params.componentId) }).value();
+  res.json({ component });
+});
+
+app.delete('/api/machines/:machineId/components/:componentId', auth, adminOnly, (req, res) => {
+  db.get('components').remove({ id: Number(req.params.componentId) }).write();
+  res.json({ success: true });
+});
+
+// FACTURES - créer et modifier
+app.post('/api/invoices', auth, adminOnly, (req, res) => {
+  const { client_id, items, notes } = req.body;
+  const client = db.get('users').find({ id: Number(client_id) }).value();
+  const total = (items || []).reduce((s, it) => s + (it.quantity * it.unit_price), 0);
+  const invoice = { id: nextId('invoices'), client_id, client_name: client?.full_name || client?.email, total, notes, items, status: 'pending', created_at: new Date().toISOString() };
+  db.get('invoices').push(invoice).write();
+  res.json({ invoice });
+});
+
+app.put('/api/invoices/:id', auth, adminOnly, (req, res) => {
+  db.get('invoices').find({ id: Number(req.params.id) }).assign(req.body).write();
+  const invoice = db.get('invoices').find({ id: Number(req.params.id) }).value();
+  res.json({ invoice });
+});
+
+app.delete('/api/invoices/:id', auth, adminOnly, (req, res) => {
+  db.get('invoices').remove({ id: Number(req.params.id) }).write();
+  res.json({ success: true });
+});
